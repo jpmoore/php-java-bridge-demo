@@ -1,0 +1,67 @@
+<project name="HelloWorld" default="dist" basedir=".">
+  <description>
+    Simple Hello World build file
+  </description>
+
+  <!-- set global properties for this build -->
+  <property name="app.name"      value="HelloWorld" />
+  <property name="app.version"   value="0.1.0-dev" />
+  <!-- set global paths for this build -->
+  <property name="src.dir"       location="src" />
+  <property name="build.dir"     location="build" />
+  <property name="build.lib.dir" location="${build.dir}/lib" />
+  <property name="dist.dir"      location="dist" />
+  <property name="lib.dir"       location="lib" />
+
+  <path id="lib.files.jars.path">
+    <fileset id="lib.files.jars" dir="lib" includes="**/*.jar" />
+  </path>
+
+  <target name="init">
+    <!-- Create the time stamp -->
+    <tstamp />
+    <!-- Create the build directory -->
+    <mkdir dir="${build.dir}" />
+    <mkdir dir="${build.lib.dir}" />
+  </target>
+
+  <target name="compile" depends="init" description="compile the source">
+    <!-- Compile the Java code from ${src} into ${build} -->
+    <copy todir="${build.lib.dir}">
+      <fileset refid="lib.files.jars" />
+    </copy>
+    <unzip dest="${build.lib.dir}">
+      <patternset>
+        <exclude name="META-INF" />
+      </patternset>
+      <fileset refid="lib.files.jars" />
+    </unzip>
+    <javac srcdir="${src.dir}" destdir="${build.dir}" classpathref="lib.files.jars.path" includeantruntime="false" />
+  </target>
+
+  <target name="dist" depends="compile" description="generate the distribution">
+    <!-- Create the distribution directory -->
+    <mkdir dir="${dist.dir}/lib" />
+
+    <!-- Setup the class path for the manifest -->
+    <manifestclasspath property="manifest.classpath" jarfile="${app.name}-${DSTAMP}.jar">
+      <classpath refid="lib.files.jars.path" />
+    </manifestclasspath>
+
+    <echo message="manifest.classpath: ${manifest.classpath}" />
+
+    <!-- Put everything in ${build} into the HelloWorld-${DSTAMP}.jar file -->
+    <jar jarfile="${dist.dir}/lib/${app.name}-${DSTAMP}.jar" basedir="${build.dir}">
+      <manifest>
+        <attribute name="Main-Class" value="${app.name}" />
+        <attribute name="Class-Path" value="${manifest.classpath}" />
+      </manifest>
+    </jar>
+  </target>
+
+  <target name="clean" description="clean up">
+    <!-- Delete the ${build} and ${dist} directory trees -->
+    <delete dir="${build.dir}" />
+    <delete dir="${dist.dir}" />
+  </target>
+</project>
